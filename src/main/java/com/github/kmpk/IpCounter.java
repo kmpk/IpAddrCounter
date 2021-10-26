@@ -7,10 +7,12 @@ public class IpCounter {
     private final BitSet negative = new BitSet();
 
     public void add(int ip) {
-        if (ip < 0) {
-            this.negative.set(-ip);
-        } else {
-            this.positive.set(ip);
+        synchronized (this) {
+            if (ip < 0) {
+                this.negative.set(-ip);
+            } else {
+                this.positive.set(ip);
+            }
         }
     }
 
