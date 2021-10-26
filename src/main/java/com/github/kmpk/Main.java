@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.BitSet;
 import java.util.stream.Stream;
 
 public class Main {
     private final Path file;
-    private final BitSet positive = new BitSet();
-    private final BitSet negative = new BitSet();
 
     public Main(Path file) {
         this.file = file;
@@ -24,25 +21,18 @@ public class Main {
 
         Main instance = new Main(Path.of(args[0]));
         try {
-            System.out.println(instance.countIps());
+            System.out.println(instance.countIps(new IpCounter()));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private int countIps() throws IOException {
-        try (Stream<String> lines = Files
-                .lines(file, StandardCharsets.US_ASCII)) {
-            lines
+    private long countIps(IpCounter counter) throws IOException {
+        try (Stream<String> lines = Files.lines(file, StandardCharsets.US_ASCII)) {
+            lines.parallel()
                     .mapToInt(this::parseIpv4)
-                    .forEach(i -> {
-                        if (i < 0) {
-                            this.negative.set(-i);
-                        } else {
-                            this.positive.set(i);
-                        }
-                    });
-            return positive.cardinality() + negative.cardinality();
+                    .forEach(counter::add);
+            return counter.currentCount();
         }
     }
 
