@@ -31,7 +31,6 @@ class IpConverterTest {
     void testRandomConvertConsistency() {
         IntStream.generate(() -> ThreadLocalRandom.current().nextInt())
                 .limit(100000)
-                .parallel()
                 .forEach(i -> {
                     CharSequence converted = instance.convertIntToIpv4(i);
                     int reconverted = instance.convertIpv4ToInt(converted);
