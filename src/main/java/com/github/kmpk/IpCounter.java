@@ -16,6 +16,14 @@ public class IpCounter {
         }
     }
 
+    public void add(int[] ints, int rightBoundExclusive) {
+        synchronized (this) {
+            for (int i = 0; i < rightBoundExclusive; i++) {
+                add(ints[i]);
+            }
+        }
+    }
+
     public long currentCount() {
         return (long) positive.cardinality() + negative.cardinality();
     }

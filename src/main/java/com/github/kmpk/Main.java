@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Main {
     public static final int BYTE_BUFFER_SIZE = 1024 * 1024; //1MB
     public static final int BLOCK_OVERLAP_BYTES = 20;
+    public static final int IP_BUFFER_SIZE = 100000;
 
     public static void main(String[] args) throws InterruptedException {
         if (args.length != 1) {
@@ -27,7 +28,7 @@ public class Main {
         long leftBound = 0;
         while (leftBound < fileLength) {
             long rightBound = Math.min(leftBound + block + BLOCK_OVERLAP_BYTES, fileLength);
-            service.execute(new IpFileReader(file, leftBound, rightBound, BYTE_BUFFER_SIZE, counter, e -> {
+            service.execute(new IpFileReader(file, leftBound, rightBound, BYTE_BUFFER_SIZE, new IpBuffer(IP_BUFFER_SIZE, counter), e -> {
                 ex.compareAndSet(null, e);
                 service.shutdownNow();
             }));

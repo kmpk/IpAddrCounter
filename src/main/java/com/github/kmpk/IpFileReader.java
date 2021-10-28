@@ -13,16 +13,16 @@ public class IpFileReader implements Runnable {
     private final long initPos;
     private final long toPos;
     private final int byteBuffer;
-    private final IpCounter counter;
+    private final IpBuffer ipBuffer;
     private final Consumer<Exception> exceptionHandler;
     private final IpConverter converter = new IpConverter();
 
-    public IpFileReader(Path file, long initPos, long toPos, int bufferSize, IpCounter counter, Consumer<Exception> exceptionHandler) {
+    public IpFileReader(Path file, long initPos, long toPos, int bufferSize, IpBuffer ipBuffer, Consumer<Exception> exceptionHandler) {
         this.file = file;
         this.initPos = initPos;
         this.toPos = toPos;
         this.byteBuffer = bufferSize;
-        this.counter = counter;
+        this.ipBuffer = ipBuffer;
         this.exceptionHandler = exceptionHandler;
     }
 
@@ -45,7 +45,7 @@ public class IpFileReader implements Runnable {
             while (bf.position() < bf.limit()) {
                 char c = (char) bf.get();
                 if (c == '\n') {
-                    counter.add(converter.convertIpv4ToInt(current));
+                    ipBuffer.accept(converter.convertIpv4ToInt(current));
                     current.setLength(0);
                 } else {
                     current.append(c);
@@ -55,8 +55,9 @@ public class IpFileReader implements Runnable {
             currentPosition = seekableByteChannel.position();
         }
         if (currentPosition == fileSize && !current.isEmpty()) {
-            counter.add(converter.convertIpv4ToInt(current));
+            ipBuffer.accept(converter.convertIpv4ToInt(current));
         }
+        ipBuffer.flush();
     }
 
     private void findNextLineAndSetPosition(SeekableByteChannel seekableByteChannel, ByteBuffer bf) throws IOException {
