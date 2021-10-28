@@ -54,7 +54,7 @@ public class IpFileReader implements Runnable {
             bf.clear();
             currentPosition = seekableByteChannel.position();
         }
-        if (currentPosition == fileSize) {
+        if (currentPosition == fileSize && !current.isEmpty()) {
             counter.add(converter.convertIpv4ToInt(current));
         }
     }
