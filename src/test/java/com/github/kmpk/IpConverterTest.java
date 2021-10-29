@@ -19,20 +19,11 @@ class IpConverterTest {
     }
 
     @Test
-    void testConvertIntToIpv4() {
-        Assertions.assertEquals("0.0.0.0", instance.convertIntToIpv4(0));
-        Assertions.assertEquals("128.0.0.0", instance.convertIntToIpv4(0x80000000));
-        Assertions.assertEquals("255.255.255.255", instance.convertIntToIpv4(0xFFFFFFFF));
-        Assertions.assertEquals("0.0.0.1", instance.convertIntToIpv4(1));
-        Assertions.assertEquals("127.255.255.255", instance.convertIntToIpv4(0x7FFFFFFF));
-    }
-
-    @Test
     void testRandomConvertConsistency() {
         IntStream.generate(() -> ThreadLocalRandom.current().nextInt())
                 .limit(100000)
                 .forEach(i -> {
-                    CharSequence converted = instance.convertIntToIpv4(i);
+                    CharSequence converted = IpIntToCharSequenceConverter.convertIntToIpv4(i);
                     int reconverted = instance.convertIpv4ToInt(converted);
                     Assertions.assertEquals(i, reconverted, "Int " + i + " was unexpectedly converted back to " + reconverted + " from " + converted);
                 });

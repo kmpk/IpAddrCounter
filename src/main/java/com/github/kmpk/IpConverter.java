@@ -33,11 +33,4 @@ public class IpConverter {
     private int parseDigit(char c) {
         return c - 48;
     }
-
-    public CharSequence convertIntToIpv4(int ipv4Int) {
-        return String.valueOf(ipv4Int >>> 24) + '.' +
-                (ipv4Int >>> 16 & 0x000000ff) + '.' +
-                (ipv4Int >>> 8 & 0x000000ff) + '.' +
-                (ipv4Int & 0x000000ff);
-    }
 }
