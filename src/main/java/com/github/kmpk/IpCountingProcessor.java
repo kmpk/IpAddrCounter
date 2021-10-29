@@ -13,11 +13,10 @@ import java.util.function.Consumer;
 public class IpCountingProcessor {
     public static final int BYTE_BUFFER_SIZE = 1024 * 1024; //1MB
     public static final int BLOCK_OVERLAP_BYTES = 20;
-    public static final int IP_BUFFER_SIZE = 100000;
     public static final int PROCESSING_TIMEOUT_MINUTES = 60;
 
     private final Path path;
-    private final IpCounter counter = new IpCounter();
+    private final IntCounter counter = new IntCounter();
     private final ExecutorService executorService = ForkJoinPool.commonPool();
     private final AtomicReference<Exception> exception = new AtomicReference<>();
     Consumer<Exception> exceptionHandler = e -> {
@@ -51,7 +50,7 @@ public class IpCountingProcessor {
         if (exception.get() != null) {
             throw exception.get();
         } else {
-            return counter.currentCount();
+            return counter.count();
         }
     }
 
@@ -66,7 +65,7 @@ public class IpCountingProcessor {
         long leftBound = 0;
         while (leftBound < fileLength) {
             long rightBound = Math.min(leftBound + block + BLOCK_OVERLAP_BYTES, fileLength);
-            result.add(new IpFileReader(path, leftBound, rightBound, BYTE_BUFFER_SIZE, new IpBuffer(IP_BUFFER_SIZE, counter), exceptionHandler));
+            result.add(new IpFileReader(path, leftBound, rightBound, BYTE_BUFFER_SIZE, counter, exceptionHandler));
             leftBound = rightBound == fileLength ? rightBound : rightBound - BLOCK_OVERLAP_BYTES;
         }
         return result;

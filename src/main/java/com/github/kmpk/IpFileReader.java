@@ -7,22 +7,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class IpFileReader implements Runnable {
     private final Path file;
     private final long initPos;
     private final long toPos;
     private final int byteBuffer;
-    private final IpBuffer ipBuffer;
+    private final IntConsumer consumer;
     private final Consumer<Exception> exceptionHandler;
     private final IpConverter converter = new IpConverter();
 
-    public IpFileReader(Path file, long initPos, long toPos, int bufferSize, IpBuffer ipBuffer, Consumer<Exception> exceptionHandler) {
+    public IpFileReader(Path file, long initPos, long toPos, int bufferSize, IntConsumer consumer, Consumer<Exception> exceptionHandler) {
         this.file = file;
         this.initPos = initPos;
         this.toPos = toPos;
         this.byteBuffer = bufferSize;
-        this.ipBuffer = ipBuffer;
+        this.consumer = consumer;
         this.exceptionHandler = exceptionHandler;
     }
 
@@ -45,7 +46,7 @@ public class IpFileReader implements Runnable {
             while (bf.position() < bf.limit()) {
                 char c = (char) bf.get();
                 if (c == '\n') {
-                    ipBuffer.accept(converter.convertIpv4ToInt(current));
+                    consumer.accept(converter.convertIpv4ToInt(current));
                     current.setLength(0);
                 } else {
                     current.append(c);
@@ -55,9 +56,8 @@ public class IpFileReader implements Runnable {
             currentPosition = seekableByteChannel.position();
         }
         if (currentPosition == fileSize && !current.isEmpty()) {
-            ipBuffer.accept(converter.convertIpv4ToInt(current));
+            consumer.accept(converter.convertIpv4ToInt(current));
         }
-        ipBuffer.flush();
     }
 
     private void findNextLineAndSetPosition(SeekableByteChannel seekableByteChannel, ByteBuffer bf) throws IOException {
