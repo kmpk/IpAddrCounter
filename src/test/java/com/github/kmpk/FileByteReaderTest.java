@@ -8,17 +8,17 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class FileLinesReaderTest {
+class FileByteReaderTest {
 
     @TempDir
     Path tempDir;
 
     @Test
-    void testReadAllLines() throws IOException, InterruptedException {
+    void testReadAll() throws IOException, InterruptedException {
         String content = "1\n2\n3\n";
-        Path testFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testReadAllLines.tmp"), content);
+        Path testFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testReadAll.tmp"), content);
         StringBuilder testAccumulator = new StringBuilder();
-        FileLinesReader reader = FileLinesReader.builder(testFile, line -> testAccumulator.append(line).append('\n'))
+        FileByteReader reader = FileByteReader.builder(testFile, i -> testAccumulator.append((char) i))
                 .createReader();
         Thread readerThread = new Thread(reader);
         readerThread.start();
@@ -27,11 +27,11 @@ class FileLinesReaderTest {
     }
 
     @Test
-    void testReadLinesSkipFirst() throws IOException, InterruptedException {
+    void testReadAllSkipFirst() throws IOException, InterruptedException {
         String content = "1\n2\n3\n";
-        Path testFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testReadLinesSkipFirst.tmp"), content);
+        Path testFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testReadAllSkipFirst.tmp"), content);
         StringBuilder testAccumulator = new StringBuilder();
-        FileLinesReader reader = FileLinesReader.builder(testFile, line -> testAccumulator.append(line).append('\n'))
+        FileByteReader reader = FileByteReader.builder(testFile, i -> testAccumulator.append((char) i))
                 .setFromPos(2)
                 .createReader();
         Thread readerThread = new Thread(reader);
@@ -41,11 +41,11 @@ class FileLinesReaderTest {
     }
 
     @Test
-    void testReadLinesSkipLast() throws IOException, InterruptedException {
+    void testReadAllSkipLast() throws IOException, InterruptedException {
         String content = "1\n2\n3\n";
-        Path testFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testReadLinesSkipLast.tmp"), content);
+        Path testFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testReadAllSkipLast.tmp"), content);
         StringBuilder testAccumulator = new StringBuilder();
-        FileLinesReader reader = FileLinesReader.builder(testFile, line -> testAccumulator.append(line).append('\n'))
+        FileByteReader reader = FileByteReader.builder(testFile, i -> testAccumulator.append((char) i))
                 .setToPos(testFile.toFile().length() - 2)
                 .createReader();
         Thread readerThread = new Thread(reader);

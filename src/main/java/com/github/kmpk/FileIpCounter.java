@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class FileIpCounter {
     private static final int PROCESSING_TIMEOUT_MINUTES = 60;
@@ -20,18 +21,26 @@ public class FileIpCounter {
     private final Path path;
     private final IntCounter counter = new IntCounter();
 
-    private final int numOfProcessors = Runtime.getRuntime().availableProcessors();
-    private final ExecutorService executorService = Executors.newFixedThreadPool(numOfProcessors);
+    private final int numOfProcessors;
+    private final ExecutorService executorService;
     private final AtomicReference<Exception> exception = new AtomicReference<>();
-    private final Consumer<Exception> exceptionHandler = e -> {
-        exception.compareAndSet(null, e);
-        executorService.shutdownNow();
-    };
-    private final List<FileLinesReader> readers = new ArrayList<>();
+    private final Consumer<Exception> exceptionHandler;
+    private final List<FileByteReader> readers = new ArrayList<>();
+    private final List<IntIpBuilder> builders = new ArrayList<>();
 
-    public FileIpCounter(Path file) {
+    public FileIpCounter(Path file, int threads) {
+        this.numOfProcessors = threads;
+        this.executorService = Executors.newFixedThreadPool(numOfProcessors);
+        this.exceptionHandler = e -> {
+            exception.compareAndSet(null, e);
+            executorService.shutdownNow();
+        };
         this.path = file;
         checkFile();
+    }
+
+    public FileIpCounter(Path file) {
+        this(file, Runtime.getRuntime().availableProcessors());
     }
 
     private void checkFile() {
@@ -46,13 +55,16 @@ public class FileIpCounter {
 
     public long count() throws Exception {
         readers.addAll(createReadersList());
-        for (FileLinesReader reader : readers) {
+        for (FileByteReader reader : readers) {
             executorService.execute(reader);
         }
         executorService.shutdown();
         if (!executorService.awaitTermination(PROCESSING_TIMEOUT_MINUTES, TimeUnit.MINUTES)) {
             throw new TimeoutException("Counting timeout elapsed");
         }
+        builders.stream()
+                .filter(b -> !b.isClear())
+                .forEach(b -> counter.accept(b.buildIpAndClear()));
         if (exception.get() != null) {
             throw exception.get();
         } else {
@@ -60,12 +72,12 @@ public class FileIpCounter {
         }
     }
 
-    private List<FileLinesReader> createReadersList() throws IOException {
+    private List<FileByteReader> createReadersList() throws IOException {
         List<Long> fileBlocksRightEnds = divideFileAligningByLines(numOfProcessors);
-        List<FileLinesReader> result = new ArrayList<>();
+        List<FileByteReader> result = new ArrayList<>();
         long fileBlockLeftPos = 0;
         for (long nextRightPos : fileBlocksRightEnds) {
-            FileLinesReader reader = createReader(fileBlockLeftPos, nextRightPos);
+            FileByteReader reader = createReader(fileBlockLeftPos, nextRightPos);
             result.add(reader);
             fileBlockLeftPos = nextRightPos;
         }
@@ -97,16 +109,26 @@ public class FileIpCounter {
         return result;
     }
 
-    private FileLinesReader createReader(long leftBound, long rightBound) {
-        return FileLinesReader.builder(path, getCharSequenceConsumer())
+    private FileByteReader createReader(long leftBound, long rightBound) {
+        return FileByteReader.builder(path, getCharConsumer())
                 .setFromPos(leftBound)
                 .setToPos(rightBound)
                 .setExceptionHandler(exceptionHandler)
                 .createReader();
     }
 
-    private Consumer<CharSequence> getCharSequenceConsumer() {
-        IpConverter converter = new IpConverter();
-        return line -> counter.accept(converter.convertIpv4ToInt(line));
+    private IntConsumer getCharConsumer() {
+        IntIpBuilder builder = new IntIpBuilder();
+        builders.add(builder);
+        return c -> {
+            if (c == '\r') {
+                return;
+            }
+            if (c != '\n') {
+                builder.addChar((char) c);
+            } else {
+                counter.accept(builder.buildIpAndClear());
+            }
+        };
     }
 }

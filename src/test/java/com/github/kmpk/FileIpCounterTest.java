@@ -13,35 +13,35 @@ class FileIpCounterTest {
 
     @Test
     void testCountEmptyFile() throws Exception {
-        Path tempFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testCountEmptyFile.tmp"), IpStreamGenerator.generateIpStream(0, 0));
+        Path tempFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testCountEmptyFile.tmp"), TestUtil.generateIpStream(0, 0));
         FileIpCounter instance = new FileIpCounter(tempFile);
         Assertions.assertEquals(0, instance.count());
     }
 
     @Test
     void testCountNoDuplicates() throws Exception {
-        Path tempFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testCountNoDuplicates.tmp"), IpStreamGenerator.generateIpStream(10000, 0));
+        Path tempFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testCountNoDuplicates.tmp"), TestUtil.generateIpStream(10000, 0));
         FileIpCounter instance = new FileIpCounter(tempFile);
         Assertions.assertEquals(10000, instance.count());
     }
 
     @Test
     void testCountDuplicates() throws Exception {
-        Path tempFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testCountDuplicates.tmp"), IpStreamGenerator.generateIpStream(10000, 5000));
+        Path tempFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testCountDuplicates.tmp"), TestUtil.generateIpStream(10000, 5000));
         FileIpCounter instance = new FileIpCounter(tempFile);
         Assertions.assertEquals(10000, instance.count());
     }
 
     @Test
     void testCountBigFileNoDuplicates() throws Exception {
-        Path tempFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testCountBigFileNoDuplicates.tmp"), IpStreamGenerator.generateIpStream(10_000_000, 0));
+        Path tempFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testCountBigFileNoDuplicates.tmp"), TestUtil.generateIpStream(10_000_000, 0));
         FileIpCounter instance = new FileIpCounter(tempFile);
         Assertions.assertEquals(10_000_000, instance.count());
     }
 
     @Test
     void testCountBigFileDuplicates() throws Exception {
-        Path tempFile = FileCreator.CreateAndPopulateFile(tempDir.resolve("testCountBigFileDuplicates.tmp"), IpStreamGenerator.generateIpStream(10_000_000, 10_000_000));
+        Path tempFile = TestUtil.CreateAndPopulateFile(tempDir.resolve("testCountBigFileDuplicates.tmp"), TestUtil.generateIpStream(10_000_000, 10_000_000));
         FileIpCounter instance = new FileIpCounter(tempFile);
         Assertions.assertEquals(10_000_000, instance.count());
     }
