@@ -11,8 +11,8 @@ public class Main {
         }
         path = Path.of(args[0]);
         try {
-            IpCountingProcessor ipCountingProcessor = new IpCountingProcessor(path);
-            System.out.println(ipCountingProcessor.count());
+            FileIpCounter fileIpCounter = new FileIpCounter(path);
+            System.out.println(fileIpCounter.count());
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
