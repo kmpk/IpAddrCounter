@@ -9,12 +9,47 @@
     <version>0.1-SNAPSHOT</version>
 
     <properties>
+        <mainClass>com.github.kmpk.Main</mainClass>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
-        <junit-jupiter-api.version>5.7.2</junit-jupiter-api.version>
+        <junit-jupiter-api.version>5.8.1</junit-jupiter-api.version>
+        <native.maven.plugin.version>0.9.7.1</native.maven.plugin.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native.maven.plugin.version}</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <imageName>${project.artifactId}</imageName>
+                            <mainClass>${mainClass}</mainClass>
+                            <buildArgs>
+                                <buildArg>--no-fallback</buildArg>
+                            </buildArgs>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -26,6 +61,7 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,7 +72,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.github.kmpk.Main</mainClass>
+                            <mainClass>${mainClass}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
